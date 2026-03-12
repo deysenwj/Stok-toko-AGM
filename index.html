@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Toko AGM – Manajemen Stok</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --white:#fff;--bg:#F7F9FC;--blue:#3B7FF5;--blue-light:#EBF1FF;
+  --text:#1C2340;--muted:#8B93A7;--border:#E4E9F2;
+  --green:#22C55E;--green-bg:#EDFAF4;
+  --amber:#F59E0B;--amber-bg:#FFF8EB;
+  --red:#EF4444;--red-bg:#FFF0F0;
+  --shadow:0 2px 16px rgba(59,127,245,.08);
+  --shadow-md:0 4px 28px rgba(59,127,245,.14);
+}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* ── LOGIN ── */
+#loginScreen{
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;
+  background:linear-gradient(135deg,#EBF1FF 0%,#F7F9FC 60%,#DBEAFE 100%);
+}
+.login-card{
+  background:var(--white);border-radius:20px;padding:44px 40px 36px;
+  width:100%;max-width:380px;
+  box-shadow:0 8px 40px rgba(59,127,245,.15);
+  border:1px solid var(--border);
+  animation:su .35s cubic-bezier(.22,1,.36,1);
+}
+.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:28px;}
+.login-badge{
+  width:44px;height:44px;background:var(--blue);color:#fff;
+  font-weight:800;font-size:15px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+}
+.login-brand{font-size:22px;font-weight:800;}
+.login-brand span{color:var(--blue);}
+.login-title{font-size:15px;font-weight:700;margin-bottom:4px;}
+.login-sub{font-size:12px;color:var(--muted);margin-bottom:24px;}
+.inp-label{
+  display:block;font-size:11px;font-weight:700;letter-spacing:.6px;
+  text-transform:uppercase;color:var(--muted);margin-bottom:6px;
+}
+.inp{
+  width:100%;border:1.5px solid var(--border);border-radius:9px;
+  padding:10px 14px;font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:13.5px;color:var(--text);outline:none;
+  transition:border-color .15s;margin-bottom:14px;
+  background:var(--white);
+}
+.inp:focus{border-color:var(--blue);}
+.btn-login{
+  width:100%;padding:12px;border:none;border-radius:9px;
+  background:var(--blue);color:#fff;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:14px;font-weight:700;cursor:pointer;
+  transition:background .15s;margin-top:4px;
+  box-shadow:0 3px 12px rgba(59,127,245,.3);
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn-login:hover{background:#2563EB;}
+.btn-login:disabled{opacity:.6;cursor:not-allowed;}
+.login-err{
+  display:none;font-size:12px;font-weight:600;color:var(--red);
+  background:var(--red-bg);padding:9px 12px;border-radius:8px;margin-bottom:14px;
+}
+.login-err.show{display:block;}
+.login-info{
+  margin-top:18px;padding:10px 14px;
+  background:var(--blue-light);border-radius:8px;
+  font-size:11.5px;color:#2563EB;line-height:1.7;
+}
+.login-info strong{font-weight:700;}
+
+/* ── SETUP BANNER ── */
+.setup-banner{
+  display:none;
+  background:#FFF8EB;border:1.5px solid #FDE68A;
+  border-radius:10px;padding:14px 18px;
+  margin-bottom:20px;font-size:13px;color:#92400E;line-height:1.7;
+}
+.setup-banner.show{display:block;}
+.setup-banner strong{font-weight:700;display:block;margin-bottom:4px;}
+.setup-banner code{
+  background:#FEF3C7;padding:2px 6px;border-radius:4px;
+  font-size:12px;font-family:monospace;
+}
+
+/* ── APP ── */
+#app{display:none;}
+nav{
+  background:var(--white);border-bottom:1px solid var(--border);
+  padding:0 32px;display:flex;align-items:center;justify-content:space-between;
+  height:60px;position:sticky;top:0;z-index:50;
+  box-shadow:0 1px 8px rgba(0,0,0,.05);
+}
+.nav-logo{display:flex;align-items:center;gap:10px;}
+.logo-badge{
+  width:34px;height:34px;background:var(--blue);color:#fff;
+  font-weight:700;font-size:13px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+}
+.logo-name{font-size:16px;font-weight:700;}
+.logo-name span{color:var(--blue);}
+.nav-right{display:flex;align-items:center;gap:10px;}
+.nav-pill{font-size:12px;font-weight:600;color:var(--blue);background:var(--blue-light);padding:5px 12px;border-radius:20px;}
+.btn-logout{
+  font-size:12px;font-weight:600;color:var(--muted);
+  background:none;border:1.5px solid var(--border);
+  padding:5px 12px;border-radius:20px;cursor:pointer;
+  font-family:'Plus Jakarta Sans',sans-serif;transition:all .15s;
+}
+.btn-logout:hover{border-color:var(--red);color:var(--red);}
+
+main{max-width:980px;margin:0 auto;padding:32px 24px 60px;}
+.page-title{font-size:21px;font-weight:700;margin-bottom:3px;}
+.page-sub{font-size:13px;color:var(--muted);margin-bottom:24px;}
+
+/* API URL INPUT */
+.api-row{
+  display:flex;gap:10px;align-items:center;
+  margin-bottom:22px;padding:14px 18px;
+  background:var(--white);border:1px solid var(--border);
+  border-radius:10px;box-shadow:var(--shadow);
+  flex-wrap:wrap;
+}
+.api-row label{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.4px;white-space:nowrap;}
+.api-inp{
+  flex:1;min-width:220px;border:1.5px solid var(--border);border-radius:8px;
+  padding:7px 12px;font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:12.5px;color:var(--text);outline:none;transition:border-color .15s;
+}
+.api-inp:focus{border-color:var(--blue);}
+.btn-save-url{
+  padding:7px 16px;border:none;border-radius:8px;
+  background:var(--blue);color:#fff;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;
+  transition:background .15s;
+}
+.btn-save-url:hover{background:#2563EB;}
+.url-status{font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;white-space:nowrap;}
+.url-ok{background:var(--green-bg);color:#16A34A;}
+.url-no{background:var(--red-bg);color:var(--red);}
+
+/* TABS */
+.tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
+.tab-btn{
+  padding:8px 18px;border:1.5px solid var(--border);
+  background:var(--white);border-radius:8px;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:13px;font-weight:600;color:var(--muted);
+  cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:7px;
+}
+.tab-btn:hover{border-color:var(--blue);color:var(--blue);}
+.tab-btn.active{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 3px 10px rgba(59,127,245,.28);}
+
+.sub-tabs{
+  display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap;
+  padding:13px 16px;background:var(--white);
+  border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);
+  align-items:center;
+}
+.sub-label{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-right:4px;}
+.sub-btn{
+  padding:6px 14px;border:1.5px solid var(--border);
+  background:var(--bg);border-radius:20px;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .15s;
+}
+.sub-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light);}
+.sub-btn.active{background:var(--blue-light);border-color:var(--blue);color:var(--blue);font-weight:700;}
+
+/* CARD */
+.card{background:var(--white);border-radius:14px;border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;}
+.card-header{
+  padding:16px 22px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.card-title{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.item-count{font-size:12px;color:var(--muted);font-weight:500;}
+.btn-add{
+  display:flex;align-items:center;gap:6px;
+  background:var(--blue-light);color:var(--blue);border:none;
+  padding:7px 14px;border-radius:8px;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:12px;font-weight:700;cursor:pointer;transition:all .18s;
+}
+.btn-add:hover{background:var(--blue);color:#fff;}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;}
+thead tr{background:var(--bg);}
+th{padding:10px 18px;font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);text-align:left;border-bottom:1px solid var(--border);}
+td{padding:12px 18px;font-size:13.5px;color:var(--text);border-bottom:1px solid var(--border);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tbody tr:hover td{background:#FAFCFF;}
+.item-name{font-weight:600;}
+.item-unit{font-size:12px;color:var(--muted);}
+.price-disp{font-weight:700;}
+.price-input{
+  width:130px;border:1.5px solid var(--blue);border-radius:6px;
+  padding:5px 8px;font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:13px;font-weight:600;color:var(--text);outline:none;
+}
+.stock-wrap{display:flex;align-items:center;gap:6px;}
+.stock-btn{
+  width:26px;height:26px;border:1.5px solid var(--border);
+  background:var(--white);border-radius:6px;cursor:pointer;
+  font-size:14px;font-weight:700;color:var(--muted);
+  display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+.stock-btn:hover{border-color:var(--blue);color:var(--blue);}
+.stock-num{
+  width:48px;text-align:center;border:1.5px solid var(--border);
+  border-radius:6px;padding:5px 6px;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:13px;font-weight:700;color:var(--text);outline:none;transition:border-color .15s;
+}
+.stock-num:focus{border-color:var(--blue);}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.badge::before{content:'';width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.badge-ok{background:var(--green-bg);color:#16A34A;}.badge-ok::before{background:var(--green);}
+.badge-low{background:var(--amber-bg);color:#B45309;}.badge-low::before{background:var(--amber);}
+.badge-out{background:var(--red-bg);color:#DC2626;}.badge-out::before{background:var(--red);}
+.action-row{display:flex;gap:6px;}
+.btn-edit,.btn-save,.btn-del{
+  padding:5px 11px;border-radius:6px;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:11px;font-weight:700;cursor:pointer;border:none;transition:all .15s;
+}
+.btn-edit{background:var(--blue-light);color:var(--blue);}
+.btn-edit:hover{background:var(--blue);color:#fff;}
+.btn-save{background:var(--green-bg);color:#16A34A;}
+.btn-save:hover{background:var(--green);color:#fff;}
+.btn-del{background:var(--red-bg);color:var(--red);}
+.btn-del:hover{background:var(--red);color:#fff;}
+
+/* LOADING */
+.loading-row td{text-align:center;padding:36px;color:var(--muted);font-size:13px;}
+.spinner{display:inline-block;width:18px;height:18px;border:2.5px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:8px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty-row td{text-align:center;color:var(--muted);font-size:13px;padding:36px;}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:28px;right:28px;
+  background:var(--text);color:#fff;
+  padding:12px 20px;border-radius:10px;
+  font-size:13px;font-weight:600;box-shadow:var(--shadow-md);
+  opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none;z-index:999;
+}
+.toast.show{opacity:1;transform:translateY(0);}
+
+/* MODAL */
+.modal-bg{
+  display:none;position:fixed;inset:0;
+  background:rgba(28,35,64,.35);backdrop-filter:blur(4px);
+  z-index:200;align-items:center;justify-content:center;
+}
+.modal-bg.open{display:flex;animation:fi .2s ease;}
+@keyframes fi{from{opacity:0}to{opacity:1}}
+.modal{
+  background:var(--white);border-radius:16px;padding:28px;
+  width:100%;max-width:400px;box-shadow:var(--shadow-md);
+  animation:su .25s cubic-bezier(.22,1,.36,1);
+}
+@keyframes su{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:20px;}
+.form-row{margin-bottom:14px;}
+.form-label{display:block;font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.form-input,.form-select{
+  width:100%;border:1.5px solid var(--border);border-radius:8px;
+  padding:9px 12px;font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:13px;color:var(--text);outline:none;
+  transition:border-color .15s;background:var(--white);
+}
+.form-input:focus,.form-select:focus{border-color:var(--blue);}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.modal-footer{display:flex;gap:10px;margin-top:22px;}
+.btn-cancel{
+  flex:1;padding:10px;border:1.5px solid var(--border);border-radius:8px;
+  background:var(--white);font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;
+}
+.btn-cancel:hover{border-color:var(--text);color:var(--text);}
+.btn-submit{
+  flex:2;padding:10px;border:none;border-radius:8px;
+  background:var(--blue);color:#fff;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:13px;font-weight:700;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn-submit:hover{background:#2563EB;}
+.btn-submit:disabled{opacity:.6;cursor:not-allowed;}
+
+@media(max-width:600px){
+  nav{padding:0 14px;}
+  main{padding:20px 10px 60px;}
+  th,td{padding:9px 10px;}
+  .grid2{grid-template-columns:1fr;}
+  .login-card{padding:30px 20px 26px;}
+  .api-row{flex-direction:column;align-items:stretch;}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ LOGIN ═══ -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-badge">AGM</div>
+      <div class="login-brand">Toko <span>AGM</span></div>
+    </div>
+    <div class="login-title">Selamat Datang, Admin</div>
+    <div class="login-sub">Login untuk mengakses sistem manajemen stok</div>
+    <div class="login-err" id="loginErr">Username atau password salah.</div>
+    <label class="inp-label">Username</label>
+    <input class="inp" id="inUser" placeholder="Username" autocomplete="username"
+      onkeydown="if(event.key==='Enter')doLogin()"/>
+    <label class="inp-label">Password</label>
+    <input class="inp" id="inPass" type="password" placeholder="Password"
+      onkeydown="if(event.key==='Enter')doLogin()"/>
+    <button class="btn-login" id="btnLogin" onclick="doLogin()">
+      <span id="loginBtnText">Masuk</span>
+    </button>
+    <div class="login-info">
+      <strong>ℹ️ Info Koneksi</strong>
+      Setelah login, masukkan <strong>URL Apps Script</strong> di halaman utama agar data tersimpan ke Google Sheets.
+    </div>
+  </div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div id="app">
+  <nav>
+    <div class="nav-logo">
+      <div class="logo-badge">AGM</div>
+      <div class="logo-name">Toko <span>AGM</span></div>
+    </div>
+    <div class="nav-right">
+      <div class="nav-pill">👤 Admin</div>
+      <button class="btn-logout" onclick="logout()">Keluar</button>
+    </div>
+  </nav>
+
+  <main>
+    <div class="page-title">Manajemen Stok Barang</div>
+    <div class="page-sub">Data tersimpan langsung ke Google Sheets</div>
+
+    <!-- SETUP BANNER -->
+    <div class="setup-banner" id="setupBanner">
+      <strong>⚠️ URL Google Apps Script belum diatur</strong>
+      Masukkan URL Web App dari Google Apps Script di bawah agar perubahan tersimpan ke Google Sheets.
+      Lihat file <code>PANDUAN_SETUP.txt</code> untuk cara mendapatkan URL tersebut.
+    </div>
+
+    <!-- API URL ROW -->
+    <div class="api-row">
+      <label>🔗 URL Apps Script:</label>
+      <input class="api-inp" id="apiUrl" placeholder="https://script.google.com/macros/s/XXXXX/exec"/>
+      <button class="btn-save-url" onclick="saveUrl()">Simpan URL</button>
+      <span class="url-status url-no" id="urlStatus">Belum diatur</span>
+    </div>
+
+    <!-- CATEGORY TABS -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchCat('furniture',this)">🪑 Furniture</button>
+      <button class="tab-btn" onclick="switchCat('meuble',this)">🛋️ Meuble</button>
+      <button class="tab-btn" onclick="switchCat('elektronik',this)">📺 Elektronik</button>
+      <button class="tab-btn" onclick="switchCat('bangunan',this)">🏗️ Bangunan</button>
+    </div>
+
+    <!-- SUB TABS -->
+    <div class="sub-tabs" id="subTabs"></div>
+
+    <!-- TABLE CARD -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <span id="catIcon"></span>
+          <span id="catLabel"></span>
+          <span style="color:var(--muted)">›</span>
+          <span id="subLabel"></span>
+          <span class="item-count" id="itemCount"></span>
+        </div>
+        <button class="btn-add" onclick="openAdd()">＋ Tambah Barang</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Nama Barang</th>
+            <th>Harga</th>
+            <th>Stok</th>
+            <th>Status</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- MODAL TAMBAH -->
+<div class="modal-bg" id="modalBg" onclick="bgClick(event)">
+  <div class="modal">
+    <div class="modal-title">➕ Tambah Barang Baru</div>
+    <div class="form-row">
+      <label class="form-label">Nama Barang</label>
+      <input class="form-input" id="fName" placeholder="cth: Lemari 3 Pintu"/>
+    </div>
+    <div class="grid2">
+      <div>
+        <label class="form-label">Harga (Rp)</label>
+        <input class="form-input" id="fPrice" type="number" placeholder="500000" min="0"/>
+      </div>
+      <div>
+        <label class="form-label">Stok Awal</label>
+        <input class="form-input" id="fStock" type="number" placeholder="10" min="0"/>
+      </div>
+    </div>
+    <div class="form-row" style="margin-top:14px">
+      <label class="form-label">Satuan</label>
+      <select class="form-select" id="fUnit">
+        <option>Pcs</option><option>Set</option><option>Unit</option>
+        <option>Sak</option><option>Btg</option><option>Dus</option>
+        <option>Kaleng</option><option>Roll</option><option>Lusin</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Batal</button>
+      <button class="btn-submit" id="btnSubmit" onclick="addItem()">Simpan Barang</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════
+   CONFIG
+══════════════════════════════════════ */
+const catInfo={
+  furniture:{icon:'🪑',label:'Furniture'},
+  meuble:{icon:'🛋️',label:'Meuble'},
+  elektronik:{icon:'📺',label:'Elektronik'},
+  bangunan:{icon:'🏗️',label:'Bangunan'},
+};
+const subKeys={
+  furniture:['Lemari','Meja','Kursi','Rak'],
+  meuble:['Sofa','Lemari','Rak Hias','Aksesori'],
+  elektronik:['TV & Audio','AC & Pendingin','Peralatan Dapur','Mesin Cuci'],
+  bangunan:['Semen & Pasir','Besi & Baja','Cat & Finishing','Keramik & Granit','Pipa & Sanitasi'],
+};
+
+let curCat='furniture', curSub='', API_URL='';
+
+/* ══════════════════════════════════════
+   AUTH
+══════════════════════════════════════ */
+async function doLogin(){
+  const u=document.getElementById('inUser').value.trim();
+  const p=document.getElementById('inPass').value;
+  const err=document.getElementById('loginErr');
+  const btn=document.getElementById('btnLogin');
+  const txt=document.getElementById('loginBtnText');
+
+  if(!u||!p){err.textContent='Isi username dan password.';err.classList.add('show');return;}
+
+  // Cek kredensial lokal dulu (bisa langsung tanpa API)
+  if(u==='agm'&&p==='agmadmin'){
+    err.classList.remove('show');
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('app').style.display='block';
+    // Load saved URL
+    const saved=localStorage.getItem('agm_api_url')||'';
+    if(saved){
+      API_URL=saved;
+      document.getElementById('apiUrl').value=saved;
+      document.getElementById('urlStatus').textContent='Tersambung ✓';
+      document.getElementById('urlStatus').className='url-status url-ok';
+      document.getElementById('setupBanner').classList.remove('show');
+    } else {
+      document.getElementById('setupBanner').classList.add('show');
+    }
+    curSub=subKeys[curCat][0];
+    renderSubs();
+    loadItems();
+  } else {
+    err.textContent='Username atau password salah.';
+    err.classList.add('show');
+    document.getElementById('inPass').value='';
+  }
+}
+
+function logout(){
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('app').style.display='none';
+  document.getElementById('inUser').value='';
+  document.getElementById('inPass').value='';
+}
+
+/* ══════════════════════════════════════
+   URL MANAGEMENT
+══════════════════════════════════════ */
+function saveUrl(){
+  const val=document.getElementById('apiUrl').value.trim();
+  if(!val||!val.startsWith('https://')){
+    toast('URL tidak valid. Harus diawali https://');return;
+  }
+  API_URL=val;
+  localStorage.setItem('agm_api_url',val);
+  document.getElementById('urlStatus').textContent='Tersambung ✓';
+  document.getElementById('urlStatus').className='url-status url-ok';
+  document.getElementById('setupBanner').classList.remove('show');
+  toast('URL berhasil disimpan! Memuat data...');
+  loadItems();
+}
+
+/* ══════════════════════════════════════
+   API CALLS
+══════════════════════════════════════ */
+async function api(params){
+  if(!API_URL) return null;
+  try{
+    const url=API_URL+'?'+new URLSearchParams(params).toString();
+    const res=await fetch(url);
+    return await res.json();
+  }catch(e){
+    console.error('API error:',e);
+    return null;
+  }
+}
+
+/* ══════════════════════════════════════
+   TABS
+══════════════════════════════════════ */
+function switchCat(c,el){
+  curCat=c;
+  curSub=subKeys[c][0];
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderSubs();
+  loadItems();
+}
+function switchSub(s,el){
+  curSub=s;
+  document.querySelectorAll('.sub-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  loadItems();
+}
+function renderSubs(){
+  document.getElementById('subTabs').innerHTML=
+    `<span class="sub-label">Sub Kategori:</span>`+
+    subKeys[curCat].map(k=>
+      `<button class="sub-btn${k===curSub?' active':''}" onclick="switchSub('${k}',this)">${k}</button>`
+    ).join('');
+}
+
+/* ══════════════════════════════════════
+   RENDER
+══════════════════════════════════════ */
+function fmt(n){return'Rp '+Number(n).toLocaleString('id-ID');}
+function badge(s){
+  s=Number(s);
+  if(s===0)return'<span class="badge badge-out">Habis</span>';
+  if(s<=3)return'<span class="badge badge-low">Terbatas</span>';
+  return'<span class="badge badge-ok">Tersedia</span>';
+}
+
+let currentItems=[];
+
+function renderTable(items){
+  currentItems=items;
+  document.getElementById('catIcon').textContent=catInfo[curCat].icon;
+  document.getElementById('catLabel').textContent=catInfo[curCat].label;
+  document.getElementById('subLabel').textContent=curSub;
+  document.getElementById('itemCount').textContent=`(${items.length} item)`;
+  const tb=document.getElementById('tableBody');
+  if(!items.length){
+    tb.innerHTML=`<tr class="empty-row"><td colspan="5">Belum ada barang. Klik "Tambah Barang".</td></tr>`;
+    return;
+  }
+  tb.innerHTML=items.map(item=>`
+    <tr>
+      <td><div class="item-name">${item.name}</div><div class="item-unit">${item.unit}</div></td>
+      <td id="pc-${item.id}"><span class="price-disp">${fmt(item.price)}</span></td>
+      <td>
+        <div class="stock-wrap">
+          <button class="stock-btn" onclick="adj('${item.id}',-1)">−</button>
+          <input class="stock-num" type="number" min="0" value="${item.stock}"
+            onchange="setStk('${item.id}',this.value)" id="sn-${item.id}"/>
+          <button class="stock-btn" onclick="adj('${item.id}',1)">+</button>
+        </div>
+      </td>
+      <td id="bd-${item.id}">${badge(item.stock)}</td>
+      <td>
+        <div class="action-row">
+          <button class="btn-edit" id="be-${item.id}" onclick="startEdit('${item.id}')">Edit Harga</button>
+          <button class="btn-save" id="bs-${item.id}" style="display:none" onclick="saveEdit('${item.id}')">Simpan</button>
+          <button class="btn-del" onclick="del('${item.id}')">Hapus</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function showLoading(){
+  document.getElementById('tableBody').innerHTML=
+    `<tr class="loading-row"><td colspan="5"><span class="spinner"></span>Memuat data dari Google Sheets...</td></tr>`;
+}
+
+/* ══════════════════════════════════════
+   CRUD
+══════════════════════════════════════ */
+async function loadItems(){
+  document.getElementById('catIcon').textContent=catInfo[curCat].icon;
+  document.getElementById('catLabel').textContent=catInfo[curCat].label;
+  document.getElementById('subLabel').textContent=curSub;
+  document.getElementById('itemCount').textContent='';
+
+  if(!API_URL){
+    // Tampilkan data kosong jika belum ada URL
+    renderTable([]);return;
+  }
+  showLoading();
+  const res=await api({action:'getItems',category:curCat,sub:curSub});
+  if(res&&res.success){
+    renderTable(res.items);
+  } else {
+    document.getElementById('tableBody').innerHTML=
+      `<tr class="empty-row"><td colspan="5">⚠️ Gagal memuat data. Periksa URL Apps Script.</td></tr>`;
+  }
+}
+
+function getItem(id){return currentItems.find(x=>String(x.id)===String(id));}
+
+async function adj(id,d){
+  const item=getItem(id);if(!item)return;
+  const newStock=Math.max(0,Number(item.stock)+d);
+  item.stock=newStock;
+  document.getElementById('sn-'+id).value=newStock;
+  document.getElementById('bd-'+id).innerHTML=badge(newStock);
+  if(API_URL){
+    const r=await api({action:'updateItem',category:curCat,sub:curSub,id,field:'stock',value:newStock});
+    toast(r&&r.success?'Stok disimpan ke Sheets ✓':'Stok diupdate (offline)');
+  } else toast('Stok diupdate (belum tersambung Sheets)');
+}
+
+async function setStk(id,v){
+  const item=getItem(id);if(!item)return;
+  const newStock=Math.max(0,parseInt(v)||0);
+  item.stock=newStock;
+  document.getElementById('bd-'+id).innerHTML=badge(newStock);
+  if(API_URL){
+    const r=await api({action:'updateItem',category:curCat,sub:curSub,id,field:'stock',value:newStock});
+    toast(r&&r.success?'Stok disimpan ke Sheets ✓':'Gagal simpan, coba lagi');
+  } else toast('Stok diupdate (belum tersambung Sheets)');
+}
+
+function startEdit(id){
+  const item=getItem(id);if(!item)return;
+  document.getElementById('pc-'+id).innerHTML=
+    `<input class="price-input" id="pe-${id}" type="number" value="${item.price}" min="0"/>`;
+  document.getElementById('be-'+id).style.display='none';
+  document.getElementById('bs-'+id).style.display='inline-flex';
+  document.getElementById('pe-'+id).focus();
+}
+
+async function saveEdit(id){
+  const item=getItem(id);if(!item)return;
+  const newPrice=parseInt(document.getElementById('pe-'+id).value)||0;
+  item.price=newPrice;
+  document.getElementById('pc-'+id).innerHTML=`<span class="price-disp">${fmt(newPrice)}</span>`;
+  document.getElementById('be-'+id).style.display='inline-flex';
+  document.getElementById('bs-'+id).style.display='none';
+  if(API_URL){
+    const r=await api({action:'updateItem',category:curCat,sub:curSub,id,field:'price',value:newPrice});
+    toast(r&&r.success?'Harga disimpan ke Sheets ✓':'Gagal simpan, coba lagi');
+  } else toast('Harga diupdate (belum tersambung Sheets)');
+}
+
+async function del(id){
+  if(!confirm('Hapus barang ini?'))return;
+  currentItems=currentItems.filter(x=>String(x.id)!==String(id));
+  renderTable(currentItems);
+  if(API_URL){
+    const r=await api({action:'deleteItem',category:curCat,sub:curSub,id});
+    toast(r&&r.success?'Barang dihapus dari Sheets ✓':'Gagal hapus dari Sheets');
+  } else toast('Barang dihapus (belum tersambung Sheets)');
+}
+
+function openAdd(){
+  ['fName','fPrice','fStock'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('modalBg').classList.add('open');
+}
+function closeModal(){document.getElementById('modalBg').classList.remove('open');}
+function bgClick(e){if(e.target===document.getElementById('modalBg'))closeModal();}
+
+async function addItem(){
+  const name=document.getElementById('fName').value.trim();
+  const price=parseInt(document.getElementById('fPrice').value)||0;
+  const stock=parseInt(document.getElementById('fStock').value)||0;
+  const unit=document.getElementById('fUnit').value;
+  if(!name){alert('Nama barang wajib diisi.');return;}
+
+  const btn=document.getElementById('btnSubmit');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Menyimpan...';
+
+  if(API_URL){
+    const r=await api({action:'addItem',category:curCat,sub:curSub,name,price,stock,unit});
+    if(r&&r.success){
+      closeModal();loadItems();toast('Barang ditambahkan ke Sheets ✓');
+    } else {
+      toast('Gagal menambahkan barang. Coba lagi.');
+    }
+  } else {
+    // Offline mode
+    currentItems.push({id:Date.now(),name,price,stock,unit});
+    renderTable(currentItems);
+    closeModal();toast('Barang ditambahkan (belum tersambung Sheets)');
+  }
+  btn.disabled=false;btn.innerHTML='Simpan Barang';
+}
+
+/* ══════════════════════════════════════
+   TOAST
+══════════════════════════════════════ */
+let tt;
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(tt);tt=setTimeout(()=>el.classList.remove('show'),2500);
+}
+</script>
+</body>
+</html>
