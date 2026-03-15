@@ -1380,17 +1380,38 @@ async function _doSaveEdit(id,nm,np,dc,un,img){
     currentItems=sortItems(currentItems);
   }
   _renderItemsNoSort(currentItems);
-  toast('⏳ Menyimpan...');
+
+  /* STEP 1 — Kirim data teks (tanpa foto) secara bersamaan */
+  toast('⏳ Menyimpan data...');
   try{
-    const [r1,r2,r3,r4,r5]=await Promise.all([
+    const [r1,r2,r3,r4]=await Promise.all([
       api({action:'updateItem',category:curCat,sub:curSub,id,field:'name',value:nm}),
       api({action:'updateItem',category:curCat,sub:curSub,id,field:'price',value:np}),
       api({action:'updateItem',category:curCat,sub:curSub,id,field:'discount',value:dc}),
       api({action:'updateItem',category:curCat,sub:curSub,id,field:'unit',value:un}),
-      api({action:'updateItem',category:curCat,sub:curSub,id,field:'image',value:img}),
     ]);
-    const ok=[r1,r2,r3,r4,r5].every(r=>r&&r.success);
-    toast(ok?'✅ Barang berhasil diperbarui':'⚠️ Sebagian data gagal disimpan ke Sheets');
+    const dataOk=[r1,r2,r3,r4].every(r=>r&&r.success);
+    if(!dataOk){
+      toast('⚠️ Sebagian data teks gagal disimpan — coba lagi');
+      return;
+    }
+
+    /* STEP 2 — Kirim foto terpisah dengan retry jika ada & berubah */
+    if(img){
+      toast('📷 Menyimpan foto...');
+      const imgResult=await _sendImageWithRetry({
+        action:'updateItem',category:curCat,sub:curSub,id,field:'image',value:img
+      });
+      if(imgResult.ok){
+        toast('✅ Barang & foto berhasil diperbarui');
+      } else {
+        toast('✅ Data tersimpan  ⚠️ Foto gagal: '+imgResult.err);
+      }
+    } else {
+      /* Foto dikosongkan — kirim string kosong */
+      const ri=await api({action:'updateItem',category:curCat,sub:curSub,id,field:'image',value:''});
+      toast(ri&&ri.success?'✅ Barang berhasil diperbarui':'✅ Data tersimpan  ⚠️ Foto gagal dihapus');
+    }
   }catch(e){toast('⚠️ Gagal menyimpan: '+e.message);}
 }
 
@@ -1445,17 +1466,37 @@ async function _doSaveEditSearch(id,cat,sub,nm,np,dc,un,img){
   }
   currentItems=sortItems(currentItems);
   renderSearchResults(currentItems,searchQuery);
-  toast('⏳ Menyimpan...');
+
+  /* STEP 1 — Kirim data teks tanpa foto */
+  toast('⏳ Menyimpan data...');
   try{
-    const [r1,r2,r3,r4,r5]=await Promise.all([
+    const [r1,r2,r3,r4]=await Promise.all([
       api({action:'updateItem',category:cat,sub,id,field:'name',value:nm}),
       api({action:'updateItem',category:cat,sub,id,field:'price',value:np}),
       api({action:'updateItem',category:cat,sub,id,field:'discount',value:dc}),
       api({action:'updateItem',category:cat,sub,id,field:'unit',value:un}),
-      api({action:'updateItem',category:cat,sub,id,field:'image',value:img}),
     ]);
-    const ok=[r1,r2,r3,r4,r5].every(r=>r&&r.success);
-    toast(ok?'✅ Barang berhasil diperbarui':'⚠️ Sebagian data gagal disimpan ke Sheets');
+    const dataOk=[r1,r2,r3,r4].every(r=>r&&r.success);
+    if(!dataOk){
+      toast('⚠️ Sebagian data teks gagal disimpan — coba lagi');
+      return;
+    }
+
+    /* STEP 2 — Kirim foto terpisah dengan retry */
+    if(img){
+      toast('📷 Menyimpan foto...');
+      const imgResult=await _sendImageWithRetry({
+        action:'updateItem',category:cat,sub,id,field:'image',value:img
+      });
+      if(imgResult.ok){
+        toast('✅ Barang & foto berhasil diperbarui');
+      } else {
+        toast('✅ Data tersimpan  ⚠️ Foto gagal: '+imgResult.err);
+      }
+    } else {
+      const ri=await api({action:'updateItem',category:cat,sub,id,field:'image',value:''});
+      toast(ri&&ri.success?'✅ Barang berhasil diperbarui':'✅ Data tersimpan  ⚠️ Foto gagal dihapus');
+    }
   }catch(e){toast('⚠️ Gagal menyimpan: '+e.message);}
 }
 
@@ -1493,32 +1534,75 @@ async function addItem(){
   if(price<=0){toast('⚠️ Harga wajib diisi.');return;}
   const btn=document.getElementById('btnSubmit');
   if(btn._saving)return;
-  btn._saving=true;btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Menyimpan...';
+  btn._saving=true;btn.disabled=true;
+
   try{
-    const r=await api({action:'addItem',category:curCat,sub:curSub,name:name,price:String(price),stock:String(stock),unit:unit,discount:String(discount),image:''});
-    if(r&&r.success){
-      const newId=String(r.id);
-      if(image&&newId){await api({action:'updateItem',category:curCat,sub:curSub,id:newId,field:'image',value:image});}
-      const cacheKey=curCat+'__'+curSub;
-      if(!allCacheItems[cacheKey])allCacheItems[cacheKey]=[];
-      const alreadyExists=currentItems.some(x=>String(x.id)===newId);
-      if(!alreadyExists){
-        const newItem={id:newId,name:name,price:price,stock:stock,unit:unit,discount:discount,image:image};
-        allCacheItems[cacheKey].push(newItem);
-        allCacheItems[cacheKey]=sortItems(allCacheItems[cacheKey]);
-        _lsSet(cacheKey,allCacheItems[cacheKey]);
-      }
-      closeModal();renderItems(allCacheItems[cacheKey]);
-      toast('✅ Barang berhasil ditambahkan');
-    } else {
-      toast('⚠️ Gagal menambahkan: '+(r&&r.message?r.message:''));
+    /* STEP 1 — Simpan data teks dulu (tanpa foto) */
+    btn.innerHTML='<span class="spinner"></span>Menyimpan data...';
+    const r=await api({action:'addItem',category:curCat,sub:curSub,
+      name,price:String(price),stock:String(stock),unit,discount:String(discount),image:''
+    });
+
+    if(!r||!r.success){
+      toast('⚠️ Gagal menyimpan: '+(r&&r.message?r.message:'Cek koneksi internet'));
+      btn._saving=false;btn.disabled=false;btn.innerHTML='Simpan';
+      return;
     }
-  }catch(e){toast('⚠️ Error: '+e.message);}
+
+    const newId=String(r.id);
+
+    /* STEP 2 — Update cache lokal dulu (tampil tanpa foto) */
+    const cacheKey=curCat+'__'+curSub;
+    if(!allCacheItems[cacheKey])allCacheItems[cacheKey]=[];
+    const alreadyExists=currentItems.some(x=>String(x.id)===newId);
+    if(!alreadyExists){
+      const newItem={id:newId,name,price,stock,unit,discount,image:''};
+      allCacheItems[cacheKey].push(newItem);
+      allCacheItems[cacheKey]=sortItems(allCacheItems[cacheKey]);
+      _lsSet(cacheKey,allCacheItems[cacheKey]);
+    }
+    closeModal();
+    renderItems(allCacheItems[cacheKey]);
+
+    /* STEP 3 — Kirim foto terpisah dengan retry jika ada */
+    if(image && newId){
+      toast('📷 Mengirim foto...');
+      const imgResult=await _sendImageWithRetry({
+        action:'updateItem',category:curCat,sub:curSub,id:newId,field:'image',value:image
+      });
+      if(imgResult.ok){
+        /* Update cache dengan foto */
+        const ci=allCacheItems[cacheKey]&&allCacheItems[cacheKey].find(x=>String(x.id)===newId);
+        if(ci) ci.image=image;
+        const ci2=currentItems.find(x=>String(x.id)===newId);
+        if(ci2) ci2.image=image;
+        _lsSet(cacheKey,allCacheItems[cacheKey]);
+        updateThumbAll(newId,image,name);
+        toast('✅ Barang & foto berhasil disimpan');
+      } else {
+        toast('✅ Barang tersimpan  ⚠️ Foto gagal ('+imgResult.err+')');
+      }
+    } else {
+      toast('✅ Barang berhasil ditambahkan');
+    }
+
+  }catch(e){
+    toast('⚠️ Error: '+e.message);
+  }
+
   btn._saving=false;btn.disabled=false;btn.innerHTML='Simpan';
 }
 
 let tt;
-function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>el.classList.remove('show'),2800);}
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.classList.add('show');
+  clearTimeout(tt);
+  /* Pesan gabungan (✅+⚠️) tampil lebih lama agar sempat dibaca */
+  const duration=msg.includes('⚠️')&&msg.includes('✅')?5000:msg.includes('⚠️')?4000:2800;
+  tt=setTimeout(()=>el.classList.remove('show'),duration);
+}
 
 let _cb=null;
 
@@ -1622,6 +1706,14 @@ function previewEditDiscount(){
 let _addImgBase64='';
 let _editImgBase64='';
 
+/* ── KOMPRESI GAMBAR ──────────────────────────────────────────
+   MAX_B64 dikecilkan ke 20000 agar aman melewati Google Apps Script.
+   Sheets Apps Script punya batas payload ~50KB untuk POST form-data,
+   tapi overhead base64 + field lain bisa mendekati limit, jadi
+   kita batasi foto sendiri max ~20KB base64 (~15KB binary).
+   ────────────────────────────────────────────────────────────── */
+const MAX_IMG_B64 = 20000;
+
 function compressImage(file,maxW,maxH,quality){
   return new Promise((resolve,reject)=>{
     const reader=new FileReader();
@@ -1647,10 +1739,45 @@ function compressImage(file,maxW,maxH,quality){
 }
 
 async function compressUntilFit(file){
-  const MAX_B64=35000;
-  const steps=[{w:250,h:250,q:0.55},{w:220,h:220,q:0.50},{w:200,h:200,q:0.45},{w:180,h:180,q:0.40},{w:160,h:160,q:0.35}];
-  for(const {w,h,q} of steps){const b64=await compressImage(file,w,h,q);if(b64.length<=MAX_B64) return b64;}
-  return await compressImage(file,150,150,0.30);
+  /* Bertahap dari resolusi paling tinggi ke paling kecil */
+  const steps=[
+    {w:240,h:240,q:0.60},
+    {w:220,h:220,q:0.55},
+    {w:200,h:200,q:0.50},
+    {w:180,h:180,q:0.45},
+    {w:160,h:160,q:0.40},
+    {w:140,h:140,q:0.35},
+    {w:120,h:120,q:0.30},
+  ];
+  for(const {w,h,q} of steps){
+    const b64=await compressImage(file,w,h,q);
+    if(b64.length<=MAX_IMG_B64) return b64;
+  }
+  /* Fallback paling kecil */
+  return await compressImage(file,100,100,0.25);
+}
+
+/* ── KIRIM FOTO DENGAN RETRY ─────────────────────────────────
+   Foto dikirim TERPISAH setelah data teks berhasil, dengan
+   retry sampai 3x jika gagal, delay antar retry makin panjang.
+   ─────────────────────────────────────────────────────────── */
+async function _sendImageWithRetry(params, maxRetry=3){
+  let lastErr='';
+  for(let i=0;i<maxRetry;i++){
+    if(i>0){
+      const delay=1000*(i+1); /* 2s, 3s */
+      toast(`🔄 Mengulang kirim foto (${i}/${maxRetry-1})...`);
+      await new Promise(res=>setTimeout(res,delay));
+    }
+    try{
+      const r=await api(params);
+      if(r&&r.success) return {ok:true};
+      lastErr=(r&&r.message)||'Respons gagal dari Sheets';
+    }catch(e){
+      lastErr=e.message||'Error jaringan';
+    }
+  }
+  return {ok:false,err:lastErr};
 }
 
 async function handleImageSelect(input){
