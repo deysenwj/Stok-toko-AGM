@@ -62,21 +62,21 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 16px
   background-size:cover;
   background-position:center 40%;
   background-repeat:no-repeat;
-  filter:saturate(0.7) brightness(0.55);
+  filter:saturate(0.85) brightness(0.75);
   transform:scale(1.03);
   transition:transform 8s ease;
 }
 .hero:hover .hero-bg-img{transform:scale(1);}
 
-/* Layer 2: Overlay gradien biru (warna toko tetap biru) */
+/* Layer 2: Overlay gradien biru (opacity diturunkan agar foto terlihat) */
 .hero-overlay{
   position:absolute;
   inset:0;
   background:linear-gradient(
     135deg,
-    rgba(30,58,138,0.82) 0%,
-    rgba(37,99,235,0.72) 50%,
-    rgba(59,130,246,0.60) 100%
+    rgba(30,58,138,0.55) 0%,
+    rgba(37,99,235,0.45) 50%,
+    rgba(59,130,246,0.38) 100%
   );
 }
 
@@ -159,21 +159,7 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 16px
 .stat-num{font-family:'Sora',sans-serif;font-size:22px;font-weight:800;line-height:1;}
 .stat-lbl{font-size:9px;opacity:.8;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
 
-/* Badge "foto toko" untuk admin — placeholder hint */
-.hero-photo-hint{
-  position:absolute;
-  bottom:12px;right:16px;
-  z-index:3;
-  background:rgba(0,0,0,.35);
-  backdrop-filter:blur(6px);
-  -webkit-backdrop-filter:blur(6px);
-  border:1px solid rgba(255,255,255,.2);
-  border-radius:8px;
-  padding:4px 10px;
-  font-size:10px;color:rgba(255,255,255,.7);
-  font-weight:600;
-  display:flex;align-items:center;gap:5px;
-}
+.hero-photo-hint{display:none!important;}
 
 @media(min-width:600px){
   .hero{padding:44px 24px 48px;min-height:260px;}
